@@ -41,7 +41,7 @@ class Stage(nn.Module):
         ])
 
         if self.patches_merge is not None:
-            merging = PatchMerge(embed_dim=self.embed_dim, image_size=(self.input_size, self.input_size),
+            self.merging = PatchMerge(embed_dim=self.embed_dim, image_size=(self.input_size, self.input_size),
                                  norm_layer=True)
     
     def forward(self, x: torch.Tensor):
@@ -50,7 +50,7 @@ class Stage(nn.Module):
             x = bkl(x)
 
         if self.patches_merge is not None:
-            x = self.patches_merge(x)
+            x = self.merging(x)
             
         return x    
 
