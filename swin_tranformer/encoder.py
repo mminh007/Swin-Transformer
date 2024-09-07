@@ -21,7 +21,7 @@ class Stage(nn.Module):
                  patches_merge=None,
                  qkv_bias=True,
                  qk_scale=None,
-                 use_res_pos=True,
+                 use_rel_pos=True,
                  drop_out=0.1,
                  norm_eps=1e-12):
         super().__init__()
@@ -36,7 +36,7 @@ class Stage(nn.Module):
                       input_size=self.input_size, window_size=window_size,
                       shift_size=0 if (i % 2 == 0) else window_size // 2,
                       mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
-                      drop_out=drop_out, norm_eps=norm_eps, use_rel_pos=use_res_pos)
+                      drop_out=drop_out, norm_eps=norm_eps, use_rel_pos=use_rel_pos)
             for i in range(depth)
         ])
 
@@ -65,20 +65,19 @@ class MPLBlock(nn.Module):
                  norm_eps = 1e-12):
         super().__init__()
 
-        self.mlp = nn.Sequential([
-            nn.Linear(in_features=embed_dim, out_features=mlp_dim),
-            nn.GELU(),
-            nn.Dropout(p=drop_out),
-            nn.Linear(in_features=mlp_dim, out_features=embed_dim)
-        ])
-
+        self.fc1 = nn.Linear(in_features=embed_dim, out_features=mlp_dim)
+        self.act = nn.GELU()
+        self.drop = nn.Dropout(p=drop_out)
+        self.fc2 =  nn.Linear(in_features=mlp_dim, out_features=embed_dim)
         self.norm = nn.LayerNorm(embed_dim, eps=norm_eps)
 
-        def forward(self, x):
-            x = self.norm(x)
-            x = self.mlp(x)
-
-            return x 
+    def forward(self, x):
+        x = self.norm(x)
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.fc2(x)
+        return x 
 
 
 class SwinBlock(nn.Module):
@@ -114,7 +113,7 @@ class SwinBlock(nn.Module):
         
         self.attention = WindowAttention(embed_dim= self.embed_dim,
                                          num_heads= self.num_heads,
-                                         input_size= self.input_size,
+                                         window_size= self.window_size,
                                          qk_scale= qk_scale,
                                          qkv_bias=qkv_bias,
                                          use_rel_pos=use_rel_pos)
@@ -136,14 +135,14 @@ class SwinBlock(nn.Module):
                     img_mask[:, h, w, :] = cnt
                     cnt += 1
 
-            mask_window = window_partition(img_mask, self.window_size)
+            mask_window, _ = window_partition(img_mask, self.window_size)
             mask_window = mask_window.view(-1, self.window_size * self.window_size)
             attn_mask = mask_window.unsqueeze(1) - mask_window.unsqueeze(2)
             attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
 
             self.attn_mask = attn_mask
 
-        self.norm = nn.LayerNorm(self.embed_dim)
+        self.norm = nn.LayerNorm(self.embed_dim, eps=norm_eps)
 
 
     def forward(self, x: torch.Tensor):
@@ -158,7 +157,7 @@ class SwinBlock(nn.Module):
 
         # cyclic shift
         if self.shift_size > 0:
-            shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dim =(1,2))
+            shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dims=(1,2))
             
             x_window, pad_hw = window_partition(shifted_x, self.window_size) # (B*n_windows, window_size, window_size, embed_dim)
         
@@ -199,26 +198,26 @@ class WindowAttention(nn.Module):
     def __init__(self,
                  embed_dim: int,
                  num_heads: int,
-                 input_size: int,
+                 window_size: int,
                  qk_scale=None,
                  qkv_bias=True,
                  use_rel_pos=True,
                  **kwargs):
-        super().__init()
+        super().__init__()
 
         self.embed_dim = embed_dim
         
         self.num_heads = num_heads
 
-        self.input_size = input_size
+        self.window_size = window_size
 
         head_dim = embed_dim // num_heads
-        self.qk_scale = qk_scale or head_dim ** 0.5
+        self.qk_scale = head_dim ** 0.5 if qk_scale is None else qk_scale
 
         self.use_rel_pos = use_rel_pos
         if self.use_rel_pos:
-            self.rel_pos_h = nn.Parameter(torch.zeros(2 * input_size[0] - 1, head_dim))
-            self.rel_pos_w = nn.Parameter(torch.zeros(2 * input_size[1] - 1, head_dim))
+            self.rel_pos_h = nn.Parameter(torch.zeros(2 * window_size - 1, head_dim))
+            self.rel_pos_w = nn.Parameter(torch.zeros(2 * window_size - 1, head_dim))
 
         
         self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias = qkv_bias)
@@ -227,19 +226,19 @@ class WindowAttention(nn.Module):
     
     def forward(self, x: torch.Tensor, mask = None):
         B, L, C = x.shape # B H*W embed_dim
-        H,W = self.input_size, self.input_size
+        H,W = self.window_size, self.window_size
 
         # qkv = self.qkv(x).reshape(B, L, 3, self.num_heads, -1).permute(2, 0, 3, 1, 4) # B 
         # q,k,v = qkv.reshape(3, B * self.num_heads, L, -1).unbind(0)
 
         qkv = self.qkv(x)
-        q,k,v = tuple(rearrange(qkv, "b (h w) (d k f) -> k (b f) (h w) d", k=3, f=self.num_heads))
+        q,k,v = tuple(rearrange(qkv, "b l (d f k) -> k (b f) l d", k=3, f=self.num_heads))
 
         #qk_dot_product = (q * self.qk_scale) @ k.transpose(-2, -1)
-        qk_dot_product = torch.einsum("b i d, b j d -> b i j", q, k) * self.qk_scale
+        qk_dot_product = torch.einsum("b i d, b j d -> b i j", q, k) #* self.qk_scale
 
         if self.use_rel_pos:
-            attn = add_decompose_rel_pos(qk_dot_product, q, self.res_pos_h, self.rel_pos_w, (H,W), (H,W)) # B* numhead, H*W, H*W
+            attn = add_decompose_rel_pos(qk_dot_product, q, self.rel_pos_h, self.rel_pos_w, (H,W), (H,W)) # B* numhead, H*W, H*W
         
         if mask is not None:
             nW = mask.shape[0]
@@ -271,7 +270,7 @@ def window_partition(x, window_size):
         x = F.pad(x, (0, 0, 0, pad_w, 0, pad_h))
 
     Hp, Wp = H + pad_h, W + pad_w
-    x = x.view(1, Hp // window_size, window_size, Wp // window_size, window_size, C)
+    x = x.view(B, Hp // window_size, window_size, Wp // window_size, window_size, C)
     output = x.permute(0,1,3,2,4,5).contiguous().view(-1, window_size, window_size, C)
     
     return output, (Hp, Wp)
@@ -293,9 +292,9 @@ def window_unpartition(x, window_size, pad_hw: tuple, hw: tuple):
     x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, Hp, Wp, -1)
 
     if Hp > h or Wp > w:
-        output = x[:, :h, :w, :].contiguous()
+        x = x[:, :h, :w, :].contiguous()
     
-    return output
+    return x
 
 
 def get_rel_pos(q_size: int, k_size:int, rel_pos: torch.Tensor):
@@ -307,7 +306,7 @@ def get_rel_pos(q_size: int, k_size:int, rel_pos: torch.Tensor):
     max_rel_dist = int(2 * max(q_size, k_size) - 1)
 
     if rel_pos.shape[0] != max_rel_dist:
-        rel_pos_resized = F.interpolate(rel_pos.reshape(1, rel_pos.shapep[0], -1).permute(0, 2, 1),
+        rel_pos_resized = F.interpolate(rel_pos.reshape(1, rel_pos.shape[0], -1).permute(0, 2, 1),
                                         size = max_rel_dist,
                                         mode = "linear")
         
@@ -345,8 +344,8 @@ def add_decompose_rel_pos(attn: torch.Tensor,
     Rw = get_rel_pos(q_w, k_w, rel_pos_w)
 
     r_q = q.view(B, q_h, q_w, dim).contiguous()
-    rel_h = torch.einsum("bhwc, hkc -> bhwk", q, Rh)
-    rel_w = torch.einsum("bhwc, wkc -> bhwk", q, Rw)
+    rel_h = torch.einsum("bhwc, hkc -> bhwk", r_q, Rh)
+    rel_w = torch.einsum("bhwc, wkc -> bhwk", r_q, Rw)
 
     attn = (attn.view(B, q_h, q_w, k_h, k_w) + rel_h[:, :, :, :, None] + rel_w[:, :, :, None, :,]
             ).view(B, q_h * q_w, k_h * k_w)

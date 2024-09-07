@@ -1,0 +1,43 @@
+
+#task: detect # (str) 
+mode: train # (str) 
+
+# Train settings -------------------------------------------------------------------------------------------------------
+model: tiny # (str, optional) path to model file, 
+name: patch4_window7_224 #
+data: cifar10 # (str, optional) path to data file, 
+in_chans: 3 #(int) dimension of input
+imgsz: 224 # (int) input images size as int for train and val modes
+labels: 10 # (int) number of labels
+
+# Config model ------------------------------------------------------------------------------------------------------
+patch_size: 4 # (int) patches size
+nheads: [3, 6, 12, 24] # (list) number of attention heads
+embed_dim: 96 # (int) number of channels 
+depths: [2, 2, 6, 2] # (list) number of Blocks in each stage 
+window_size: 7 # (int) 
+mlp_ratio: 4 # (int)
+qkv_bias: True # (bool)
+qk_scale: None
+ape: True # (bool) absolute position embedding
+use_rel_pos: True # (bool) relative position embedding
+drop_out: 0.1 # (float) 
+norm_eps: 1e-12 # (float) epsilon norm NormLayer
+
+# Hyperparameter---------------------------------------------------------------------------------------------------------------------------
+epochs: 10 # (int) number of epochs to train for
+batch: 16 # (int) number of images per batch 
+devices: cuda # (int ) device to run on, i.e. cuda  or device=cpu
+#pretrained: None # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
+optimizer: Adam # (str) optimizer to use, choices=[Adam, AdamW, None]
+weight_decay: 0.05
+lr: 0.001
+beta1: 0.9
+beta2: 0.999
+eps: 1e-8
+num_workers: 1
+
+# output
+outputs_dir: ./outputs
+logger: logging
+
