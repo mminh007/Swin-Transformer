@@ -14,8 +14,9 @@ class Pathches(nn.Module):
                  norm_layer = None):
         
         super().__init__()
-
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=kernel_size, stride=stride, padding=padding)
+        
+        self.embed_dim = embed_dim
+        self.proj = nn.Conv2d(in_channels=in_chans, out_channels=embed_dim, kernel_size=kernel_size, stride=stride)
         
         if norm_layer is not None:
             self.norm = nn.LayerNorm(embed_dim)
@@ -24,9 +25,9 @@ class Pathches(nn.Module):
     def forward(self, x):
 
         x = self.proj(x)
-        B, C, H, W = x.shape
+        B, C, H, W,  = x.shape
 
-        x = x.permute(0,2,3,1).contiguous().view(B, H*W, -1) # B, embed_dim,H,W -> B,H,W,embed_dim -> B, H*W, embed_dim
+        x = x.permute(0,2,3,1).contiguous().view(B, -1, self.embed_dim) # B, embed_dim,H,W -> B,H,W,embed_dim -> B, H*W, embed_dim
         
         if self.norm is not None:
             x = self.norm(x)

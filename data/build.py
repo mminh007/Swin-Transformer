@@ -2,6 +2,7 @@
 from torch.utils.data import Dataset
 from torchvision import datasets
 import torchvision.transforms as transforms
+from torchvision.transforms import InterpolationMode
 import torch
 import torchvision
 
@@ -11,16 +12,16 @@ def build_dataloader(args):
     """
     
     transform_train = transforms.Compose([
+        transforms.ToTensor(),
         transforms.Resize(args.imgsz, interpolation=InterpolationMode.BILINEAR),
         transforms.RandomHorizontalFlip(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        transforms.ToTensor(),
     ])
 
     transform_test = transforms.Compose([
-        transforms.Resize(args.imgsz, interpolation=InterpolationMode.BILINEAR),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         transforms.ToTensor(),
+        transforms.Resize(args.imgsz, interpolation=InterpolationMode.BILINEAR),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     ])
 
     trainset = torchvision.datasets.CIFAR10(
@@ -34,7 +35,7 @@ def build_dataloader(args):
         testset, batch_size=args.batch, shuffle=False, num_workers=args.num_workers)
 
 
-    return trainset, testset
+    return trainloader, testloader
 
 
 def build_dataset():
