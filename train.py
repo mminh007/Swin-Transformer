@@ -1,15 +1,10 @@
 import torch
-import torch.nn as nn
 import os
 from torch import optim as optim
 import torch.utils
 import torch.utils.data
 import torch.utils.data.dataloader
-import torchvision.transforms as transforms
-import torchvision
 from tqdm import tqdm
-import argparse
-import gc
 import logging
 import datetime
 from data.build import build_dataloader
@@ -57,7 +52,8 @@ def main(args):
         running_loss = 0.
         # last_loss = 0.
         for idx, (samples, targets) in enumerate(tqdm(train_set)):
-            samples = samples.to(args.devices)
+            if args.dtype == "bf16":
+                samples = samples.to(args.devices).to(torch.bfloat16)
             targets = targets.to(args.devices)
             
             optimizer.zero_grad()
@@ -79,7 +75,8 @@ def main(args):
             val_loss = 0.
             acc = 0.
             for idx, (samples, targets) in enumerate(tqdm(test_set)):
-                samples = samples.to(args.devices)
+                if args.dtype == "bf16":
+                    samples = samples.to(args.devices).to(torch.bfloat16)
                 targets = targets.to(args.devices) #  (,num_classes)
 
                 predicted = model(samples)  # (B, num_classes)
