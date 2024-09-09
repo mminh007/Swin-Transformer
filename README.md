@@ -1,4 +1,4 @@
-# Swin Transformer implement
+# Implementation of Swin Transformer with Pytorch 
 
 The script `train.py` performs model training
 
