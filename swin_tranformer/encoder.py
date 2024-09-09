@@ -212,7 +212,7 @@ class WindowAttention(nn.Module):
         self.window_size = window_size
 
         head_dim = embed_dim // num_heads
-        self.qk_scale = head_dim ** 0.5 if qk_scale is None else qk_scale
+        self.qk_scale = head_dim ** 0.5 if qk_scale == "None" else qk_scale
 
         self.use_rel_pos = use_rel_pos
         if self.use_rel_pos:
@@ -235,7 +235,7 @@ class WindowAttention(nn.Module):
         q,k,v = tuple(rearrange(qkv, "b l (d f k) -> k (b f) l d", k=3, f=self.num_heads))
 
         #qk_dot_product = (q * self.qk_scale) @ k.transpose(-2, -1)
-        qk_dot_product = torch.einsum("b i d, b j d -> b i j", q, k) #* self.qk_scale
+        qk_dot_product = torch.einsum("b i d, b j d -> b i j", q, k) * float(self.qk_scale)
 
         if self.use_rel_pos:
             attn = add_decompose_rel_pos(qk_dot_product, q, self.rel_pos_h, self.rel_pos_w, (H,W), (H,W)) # B* numhead, H*W, H*W

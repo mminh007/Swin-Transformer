@@ -43,7 +43,7 @@ class SwinTransformer(nn.Module):
                           window_size= window_size, mlp_ratio= mlp_ratio, 
                           patches_merge=True if (i < self.num_stages - 1) else None, # merge patch at stage 1 2 3
                           qk_scale= qk_scale, qkv_bias=qkv_bias,
-                          use_rel_pos=use_rel_pos, drop_out=drop_out, norm_eps=norm_eps)
+                          use_rel_pos=use_rel_pos, drop_out=drop_out, norm_eps=float(norm_eps))
             
             self.stages.append(stage) 
         
@@ -80,6 +80,11 @@ def build_model(args):
     model = SwinTransformer(in_chans= args.in_chans, image_size= args.imgsz, patch_size= args.patch_size,
                             ape = args.ape, num_classes= args.labels, depths = args.depths, embed_dim= args.embed_dim,
                             window_size= args.window_size, mlp_ratio = args.mlp_ratio, qkv_bias = args.qkv_bias,
-                            qk_scale= args.qk_scale, drop_out = args.drop_out, norm_eps= float(args.norm_eps), use_rel_pos= args.use_rel_pos)
+                            qk_scale= args.qk_scale, drop_out = args.drop_out, norm_eps= args.norm_eps, use_rel_pos= args.use_rel_pos)
     
+    if args.dtype == "bf16":
+        model = model.to(torch.bfloat16)
+    else:
+        model = model.to(torch.float32)
+
     return model

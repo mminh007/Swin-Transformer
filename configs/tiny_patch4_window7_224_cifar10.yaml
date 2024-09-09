@@ -27,6 +27,7 @@ norm_eps: 1e-12 # (float) epsilon norm NormLayer
 # Hyperparameter---------------------------------------------------------------------------------------------------------------------------
 epochs: 10 # (int) number of epochs to train for
 batch: 16 # (int) number of images per batch 
+dtype: bf16 # [None, bf16]
 devices: cuda # (int ) device to run on, i.e. cuda  or device=cpu
 #pretrained: None # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
 optimizer: Adam # (str) optimizer to use, choices=[Adam, AdamW, None]

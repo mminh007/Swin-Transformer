@@ -1,6 +1,4 @@
 # function to create data (CIFAR 10)
-from torch.utils.data import Dataset
-from torchvision import datasets
 import torchvision.transforms as transforms
 from torchvision.transforms import InterpolationMode
 import torch
