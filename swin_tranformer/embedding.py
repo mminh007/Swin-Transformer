@@ -69,26 +69,27 @@ class PatchMerge(nn.Module):
         x = x.view(B, H, W, C).contiguous().permute(0,3,1,2)
 
         # downsample 
-        x = self.downsample(x)
+        # x = self.downsample(x)
 
-        x = x.permute(0,2,3,1).contiguous().view(B, -1, C * 2)  # B, h, w, embed_dim *2 -> B, h*w, embed_dim*2
+        # x = x.permute(0,2,3,1).contiguous().view(B, -1, C * 2)  # B, h, w, embed_dim *2 -> B, h*w, embed_dim*2
  
-        if self.norm is not None:
-            x = self.norm(x)
-
-        # x = x.view(B, H, W, C)
-
-        # x0 = x[:, 0::2, 0::2]
-        # x1 = x[:, 1::2, 0::2]
-        # x2 = x[:, 0::2, 1::2]
-        # x3 = x[:, 1::2, 1::2]
-
-        # x = torch.cat([x0, x1, x2, x3], dim = -1) 
-        # x = x.view(B, -1, 4 * C)
-
         # if self.norm is not None:
         #     x = self.norm(x)
+
+        x = x.view(B, H, W, C)
+
+        x0 = x[:, 0::2, 0::2]
+        x1 = x[:, 1::2, 0::2]
+        x2 = x[:, 0::2, 1::2]
+        x3 = x[:, 1::2, 1::2]
+
+        x = torch.cat([x0, x1, x2, x3], dim = -1) 
+        x = x.view(B, -1, 4 * C)
+
+        if self.norm is not None:
+            x = self.norm(x)
         
-        # x = self.reduce(x)
+        x = self.reduce(x)
         
         return x
+    
