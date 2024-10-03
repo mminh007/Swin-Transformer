@@ -180,7 +180,7 @@ class SwinBlock(nn.Module):
         x += shortcut
 
         # FFN
-        x = x = self.mlp(self.norm(x))
+        x = self.mlp(self.norm(x))
 
         return x
 
