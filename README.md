@@ -1,7 +1,7 @@
 # Swin Transformer 
+*Knowledge provided by* [AI VIET NAM](https://aivietnam.edu.vn/) 
 
-Reimplementation of Swin Transfoermer model
-Based on https://github.com/microsoft/Swin-Transformer
+Reimplementation of Swin Transfoermer model *based on* [The official implementation for Swin Transformer](https://github.com/microsoft/Swin-Transformer)
 
 <img src="./images/211130.png">
 
