@@ -1,6 +1,6 @@
 # Swin Transformer 
 
-Reimplementation of Swin Transfoermer model
+Reimplementation of Swin Transformer model
 Based on https://github.com/microsoft/Swin-Transformer
 
 <img src="./images/211130.png">
