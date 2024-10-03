@@ -1,5 +1,3 @@
-# Implementation of Swin Transformer with Pytorch 
-
 The script `train.py` performs model training
 
 ## Installing dependencies
@@ -7,17 +5,17 @@ The script `train.py` performs model training
 > git clone https://github.com/mminh007/swin-transformer.git
 > cd swin-transformer
 ```
-
+_________
 ## Config
 the *config.yaml* file is located *./configs* 
 
 example: ./configs/tiny_patch4_window7_224_cifar10.yaml
-
+_________
 ## Run script
 ```
 python ./train.py --config_file ./configs/tiny_patch4_window7_224_cifar10.yaml
 ```
-
+________
 # NOTE
 The model is set up with two configurations. 
 
@@ -42,3 +40,4 @@ base model:
     - depths: [2, 2, 18, 2]
     - window size: 7
 ```
+
