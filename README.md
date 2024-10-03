@@ -7,6 +7,7 @@ Based on https://github.com/microsoft/Swin-Transformer
 
 The script `train.py` performs model training
 
+___________
 ## Installing dependencies
 ```
 > git clone https://github.com/mminh007/swin-transformer.git
