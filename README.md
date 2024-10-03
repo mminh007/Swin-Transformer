@@ -1,10 +1,3 @@
-# Swin Transformer 
-
-Reimplementation of Swin Transfoermer model
-Based on https://github.com/microsoft/Swin-Transformer
-
-<img src="./images/211130.png">
-
 The script `train.py` performs model training
 
 ## Installing dependencies
@@ -47,32 +40,4 @@ base model:
     - depths: [2, 2, 18, 2]
     - window size: 7
 ```
-_______________________________
 
-## Window partition
-
-<img src="./images/211109.png">
-
-### Motivation
-Challenges in adapting Transformer from language to vision arise from differences between the two domains.
-
-Regular self-attention requires quadratic of the image size number of operations, limiting applications in computer vision where high resolution is necessary.
-
-### Shift window based Self-Attention
-Self-attention is applied on each patch, here referred to as windows. In layer 1 (left), a regular window partitioning scheme is adopted, and self-attention is computed within each window.
-
-Then, the windows are shifted, resulting in a new window configuration to apply self-attention again. This allows the creation of connections between windows while maintaining the computation efficiency of this windowed architecture.
-_________________________________
-
-## Cyclic-Shift
-The paper propose an efficient batch computation approach by cylic-shift toward the top-left direction.
-
-After this shift, a batched window may be composed of several sub-windows that are not adjacent in the feature map, so a masking mechanism is employed to limit self-attetion computation to within each sub-window.
-
-<img src ="./images/102437.png">
-
-_____________
-
-## Swin Block
-
-<img src ="./images/213729.png">
