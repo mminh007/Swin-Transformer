@@ -6,7 +6,6 @@ _ext
 *.so
 *.dll
 *.log
-*.egg-info/
 build/
 dist/
 wheels/
