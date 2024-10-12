@@ -40,7 +40,12 @@ class PatchMerge(nn.Module):
     embed_dim: number of channels
     norm_layer: Normalization
     image_size: size of input
+    -------------------------
+    Input:
+        tensor (B, L, C)
     
+    Output:
+        tensor: (B, H/2 * W/2, 4*C)
     """
 
     def __init__(self,
@@ -52,14 +57,14 @@ class PatchMerge(nn.Module):
         self.img_size = image_size #(H,W)
         self.embed_dim = embed_dim
         
-        if norm_layer is not None:
-            self.norm = nn.LayerNorm(self.embed_dim * 2)
-        
-        self.downsample = nn.Conv2d(in_channels= embed_dim, out_channels= embed_dim * 2, kernel_size=2, stride=2, padding=0)
-
-        # self.reduce = nn.Linear(4 * embed_dim, 2 * embed_dim)
         # if norm_layer is not None:
-        #     self.norm = nn.LayerNorm(4 * embed_dim)
+        #     self.norm = nn.LayerNorm(self.embed_dim * 2)
+        
+        # self.downsample = nn.Conv2d(in_channels= embed_dim, out_channels= embed_dim * 2, kernel_size=2, stride=2, padding=0)
+
+        self.reduce = nn.Linear(4 * embed_dim, 2 * embed_dim)
+        if norm_layer is not None:
+            self.norm = nn.LayerNorm(4 * embed_dim)
     
     def forward(self, x):
         B, L, C = x.shape  # B, H*W, embed_dim
