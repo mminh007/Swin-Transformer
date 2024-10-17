@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from swin_tranformer.embedding import PatchMerge, Pathches
-from swin_tranformer.encoder import Stage, MPLBlock
+from swin_tranformer.embedding import Pathches
+from swin_tranformer.encoder import Stage
 
 
 class SwinTransformer(nn.Module):
@@ -67,7 +67,7 @@ class SwinTransformer(nn.Module):
             x = stg(x)
         
         x = self.norm(x) # B L C
-        x = self.avgpool(x) # B, embed_dim * 8, 1
+        x = self.avgpool(x.transpose(1,2)) # B, embed_dim, 1
 
         # head
         x = torch.flatten(x, 1) # B, embed_dim
@@ -85,6 +85,6 @@ def build_model(args):
     if args.dtype == "bf16":
         model = model.to(torch.bfloat16)
     else:
-        model = model.to(torch.float32)
+        model = model.to(torch.float16)
 
     return model

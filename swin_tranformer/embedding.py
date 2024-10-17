@@ -71,7 +71,7 @@ class PatchMerge(nn.Module):
         
         H, W = self.img_size[0], self.img_size[1]
 
-        x = x.view(B, H, W, C).contiguous().permute(0,3,1,2)
+        #x = x.view(B, H, W, C).contiguous().permute(0,3,1,2)
 
         # downsample 
         # x = self.downsample(x)
