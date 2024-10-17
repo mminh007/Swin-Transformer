@@ -232,10 +232,10 @@ class WindowAttention(nn.Module):
         # q,k,v = qkv.reshape(3, B * self.num_heads, L, -1).unbind(0)
 
         qkv = self.qkv(x)
-        q,k,v = tuple(rearrange(qkv, "b l (d f k) -> k b f l d", k=3, f=self.num_heads))
+        q,k,v = tuple(rearrange(qkv, "b l (d f k) -> k (b f) l d", k=3, f=self.num_heads))
 
         #qk_dot_product = (q * self.qk_scale) @ k.transpose(-2, -1)
-        qk_dot_product = torch.einsum("b h i d, b j d -> b h i j", q, k) * float(self.qk_scale)
+        qk_dot_product = torch.einsum("b i d, b j d -> b i j", q, k) * float(self.qk_scale)
 
         if self.use_rel_pos:
             attn = add_decompose_rel_pos(qk_dot_product, q, self.rel_pos_h, self.rel_pos_w, (H,W), (H,W)) # B* numhead, H*W, H*W

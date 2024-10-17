@@ -3,7 +3,9 @@
 
 Reimplementation of Swin Transformer model *based on* [The official implementation for Swin Transformer](https://github.com/microsoft/Swin-Transformer)
 
-<img src="./images/211130.png">
+<div style="text-align: center;">
+    <img src="./images/211130.png" alt="Swin-Transformers-Architecture">
+</div>
 
 The script `train.py` performs model training
 
@@ -21,7 +23,7 @@ example: ./configs/tiny_patch4_window7_224_cifar10.yaml
 _________
 ## Run script
 ```
-python ./train.py --config_file ./configs/tiny_patch4_window7_224_cifar10.yaml
+python ./train.py --config-file ./configs/tiny_patch4_window7_224_cifar10.yaml
 ```
 ________
 # NOTE
@@ -51,8 +53,10 @@ base model:
 _______________________________
 
 ## Window partition
+<div style="text-align: center;">
+    <img src="./images/211109.png", alt="Window-partition">
+</div>
 
-<img src="./images/211109.png">
 
 ### Motivation
 Challenges in adapting Transformer from language to vision arise from differences between the two domains.
@@ -70,10 +74,14 @@ The paper propose an efficient batch computation approach by cylic-shift toward 
 
 After this shift, a batched window may be composed of several sub-windows that are not adjacent in the feature map, so a masking mechanism is employed to limit self-attetion computation to within each sub-window.
 
-<img src ="./images/102437.png">
 
+<div style="text-align: center;">
+    <img src ="./images/102437.png", alt="Cyclic-Shift">
+</div>
 _____________
 
 ## Swin Block
+<div style="text-align: center;">
+    <img src ="./images/213729.png", alt="Swin-Block">
+</div>
 
-<img src ="./images/213729.png">

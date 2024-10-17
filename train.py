@@ -51,15 +51,17 @@ def main(args):
         
         running_loss = 0.
         # last_loss = 0.
-        for idx, (samples, targets) in enumerate(tqdm(train_set)):
+        for idx, (x, y) in enumerate(tqdm(train_set)):
             if args.dtype == "bf16":
-                samples = samples.to(args.devices).to(torch.bfloat16)
-            targets = targets.to(args.devices)
+                x = x.to(args.devices).to(torch.bfloat16)
+            else:
+                x = x.to(args.devices).to(torch.float16)
+            y = y.to(args.devices).long() #  (,num_cl
             
             optimizer.zero_grad()
-            outputs = model(samples)
+            outputs = model(x)
 
-            loss = criterion(outputs, targets)
+            loss = criterion(outputs, y)
             
             loss.backward()
             optimizer.step()
@@ -77,15 +79,17 @@ def main(args):
             for idx, (samples, targets) in enumerate(tqdm(test_set)):
                 if args.dtype == "bf16":
                     samples = samples.to(args.devices).to(torch.bfloat16)
-                targets = targets.to(args.devices) #  (,num_classes)
+                else:
+                    samples = samples.to(args.devices).to(torch.float16)
+                targets = targets.to(args.devices).long() #  (,num_cl
 
                 predicted = model(samples)  # (B, num_classes)
-                loss = criterion(outputs, targets)
+                loss = criterion(predicted, targets)
 
                 val_loss += loss.item()
                 outputs = torch.argmax(input= predicted, dim=1)  # B, num_classes -> , labels
 
-                accuracy = torch.sum(targets == outputs) 
+                accuracy = torch.sum(targets == outputs).item()
                 acc += accuracy
 
         avg_loss = running_loss / len(train_set)
@@ -109,6 +113,6 @@ if __name__ == "__main__":
     parser = setup_parse()
 
     args = parser.parse_args()
-    args = update_config(args, parser)
+    args = update_config(args)
 
     main(args)

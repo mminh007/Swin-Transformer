@@ -1,7 +1,7 @@
 
 #task: detect # (str) 
 mode: train # (str) 
-
+config_file: ./config/tiny_patch_4_window7_224_cifar10.yaml
 # Train settings -------------------------------------------------------------------------------------------------------
 model: tiny # (str, optional) path to model file, 
 name: patch4_window7_224 #
@@ -40,5 +40,5 @@ num_workers: 1
 
 # output
 outputs_dir: ./outputs
-logger: logging
+#logger: logging
 
